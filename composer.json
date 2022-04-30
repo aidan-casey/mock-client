@@ -1,0 +1,37 @@
+{
+    "name": "aidan-casey/mock-client",
+    "description": "A PSR compliant mock client for testing.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Aidan Casey",
+            "email": "aidan.casey@anteris.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "AidanCasey\\MockClient\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AidanCasey\\MockClient\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "psr/http-client": "^1.0",
+        "psr/http-message": "^1.0",
+        "psr/http-factory": "^1.0",
+        "psr/http-factory-implementation": "^1.0",
+        "phpunit/phpunit": "^9.0",
+        "php-http/discovery": "^1.14"
+    },
+    "require-dev": {
+        "guzzlehttp/psr7": "^2.2"
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit",
+        "coverage": "./vendor/bin/phpunit --coverage-html ./build/coverage"
+    }
+}
