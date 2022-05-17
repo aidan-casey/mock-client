@@ -22,5 +22,5 @@ jobs:
       - name: Install dependencies
         run: composer install
 
-      - name: Execute tests
+      - name: Run Psalm
         run: composer psalm
