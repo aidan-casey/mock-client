@@ -1,17 +1,12 @@
-name: Tests
+name: Static Analysis
 
 on: [push, pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        php: [8.1]
-        stability: [prefer-lowest, prefer-stable]
 
-    name: P${{ matrix.php }} - ${{ matrix.stability }}
+    name: Run Psalm
 
     steps:
       - name: Checkout code
@@ -25,7 +20,7 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+        run: composer install
 
       - name: Execute tests
-        run: composer test
+        run: composer psalm

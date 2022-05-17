@@ -12,7 +12,7 @@ class ClientTest extends TestCase
 {
     public function test_it_will_fake_exact_uris()
     {
-        $response = Client::response(201, 'Created');
+        $response = Client::response(code: 201);
 
         $client = Client::fake([
             'example.com/some/path' => $response
@@ -27,8 +27,8 @@ class ClientTest extends TestCase
 
     public function test_it_will_fake_wildcard_uris()
     {
-        $response1 = Client::response(201, 'Created!');
-        $response2 = Client::response(301, 'Redirected!');
+        $response1 = Client::response(code: 201);
+        $response2 = Client::response(code: 301);
 
         $client = Client::fake([
             'example.com/*/testing' => $response1,
@@ -44,8 +44,8 @@ class ClientTest extends TestCase
 
     public function test_it_prefers_exact_uris_over_wildcard()
     {
-        $response1 = Client::response(200, 'Hello');
-        $response2 = Client::response(418, "I'm a teapot");
+        $response1 = Client::response(code: 200);
+        $response2 = Client::response(code: 418);
 
         $client = Client::fake([
             'example.com/some/*' => $response1,
@@ -60,8 +60,8 @@ class ClientTest extends TestCase
     public function test_it_will_return_responses_in_sequence()
     {
         $sequence = [
-            Client::response(200, 'Hello'),
-            Client::response(201, 'Created'),
+            Client::response(code: 200),
+            Client::response(code: 201),
         ];
 
         $client = Client::fake([
@@ -79,8 +79,8 @@ class ClientTest extends TestCase
     public function test_it_will_return_responses_in_random_order()
     {
         $sequence = [
-            Client::response(200, 'Hello'),
-            Client::response(201, 'Created'),
+            Client::response(code: 200),
+            Client::response(code: 201),
         ];
 
         $client = Client::fake([
@@ -93,6 +93,46 @@ class ClientTest extends TestCase
         $this->assertContains($client->sendRequest($request), $sequence);
         $this->assertContains($client->sendRequest($request), $sequence);
         $this->assertContains($client->sendRequest($request), $sequence);
+    }
+
+    public function test_it_will_default_to_okay_response()
+    {
+        $response = Client::response();
+
+        $this->assertSame(200, $response->getStatusCode());
+    }
+
+    public function test_it_will_create_response_body_from_file()
+    {
+        $response = Client::response(__DIR__ . '/stubs/response.json');
+
+        $this->assertStringEqualsFileCanonicalizing(
+            __DIR__ . '/stubs/response.json',
+            $response->getBody()->getContents()
+        );
+    }
+
+    public function test_it_will_create_response_body_from_string()
+    {
+        $response = Client::response('Hello, world!');
+
+        $this->assertSame('Hello, world!', $response->getBody()->getContents());
+    }
+
+    public function test_it_will_create_response_body_from_array()
+    {
+        $response = Client::response(['test' => 'value']);
+
+        $this->assertSame('{"test":"value"}', $response->getBody()->getContents());
+    }
+
+    public function test_it_will_create_response_with_headers()
+    {
+        $response = Client::response(headers: [
+            'test-header' => 'test-value',
+        ]);
+
+        $this->assertSame('test-value', $response->getHeaderLine('test-header'));
     }
 
     public function test_it_passes_request_uri_assertions()

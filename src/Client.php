@@ -8,10 +8,13 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
 final class Client implements ClientInterface
 {
-    private ResponseFactoryInterface $responseFactory;
+    private readonly ResponseFactoryInterface $responseFactory;
+
+    private readonly StreamFactoryInterface $streamFactory;
 
     /** @var array<array-key,RequestInterface> $requests */
     private array $requests = [];
@@ -24,9 +27,10 @@ final class Client implements ClientInterface
     /** @var array<string,ResponseInterface|ResponseBag> $fakedResponses */
     private array $fakedWildcardResponses = [];
 
-    public function __construct(?ResponseFactoryInterface $responseFactory = null)
+    public function __construct(?ResponseFactoryInterface $responseFactory = null, ?StreamFactoryInterface $streamFactory = null)
     {
-        $this->responseFactory = $responseFactory ?? Psr17FactoryDiscovery::findResponseFactory();
+        $this->responseFactory = $responseFactory ?: Psr17FactoryDiscovery::findResponseFactory();
+        $this->streamFactory = $streamFactory ?: Psr17FactoryDiscovery::findStreamFactory();
     }
 
     /**
@@ -53,9 +57,28 @@ final class Client implements ClientInterface
         return static::sequence($responses)->randomize();
     }
 
-    public static function response(int $code = 200, string $reasonPhrase = ''): ResponseInterface
+    /**
+     * @param array<string,string> $headers
+     */
+    public static function response(string|array $body = null, int $code = 200, array $headers = []): ResponseInterface
     {
-        return (new self)->responseFactory->createResponse($code, $reasonPhrase);
+        $client = (new self);
+        $response = $client->responseFactory->createResponse($code);
+        $body = is_array($body) ? json_encode($body) : $body;
+
+        if (! is_null($body)) {
+            $stream = is_file($body)
+                ? $client->streamFactory->createStreamFromFile($body)
+                : $client->streamFactory->createStream($body);
+
+            $response = $response->withBody($stream);
+        }
+
+        foreach ($headers as $header => $value) {
+            $response = $response->withHeader($header, $value);
+        }
+
+        return $response;
     }
 
     public function sendRequest(RequestInterface $request): ResponseInterface
@@ -79,7 +102,7 @@ final class Client implements ClientInterface
         $this->assertRequestsWereMade();
 
         PHPUnit::assertSame(
-            strtolower($uri), strtolower($this->lastRequest->getUri())
+            strtolower($uri), strtolower($this->lastRequest->getUri()->__toString())
         );
 
         return $this;
@@ -153,7 +176,7 @@ final class Client implements ClientInterface
     }
 
     /**
-     * @param array<string,ResponseInterface|ResponseBag> $map
+     * @param array<string,ResponseInterface|ResponseBag> $responses
      */
     private function setResponses(array $responses): self
     {
@@ -178,7 +201,7 @@ final class Client implements ClientInterface
     private function resolveFakeResponse(RequestInterface $request): ?ResponseInterface
     {
         foreach ($this->fakedResponses as $uri => $fakedResponse) {
-            if (strtolower($uri) !== strtolower($request->getUri())) {
+            if (strtolower($uri) !== strtolower($request->getUri()->__toString())) {
                 continue;
             }
 
@@ -195,7 +218,7 @@ final class Client implements ClientInterface
         foreach ($this->fakedWildcardResponses as $url => $fakedWildcardResponse) {
             $url = str_replace('\*', '.*', preg_quote($url, '/'));
 
-            if (! preg_match("/$url/i", $request->getUri())) {
+            if (! preg_match("/$url/i", $request->getUri()->__toString())) {
                 continue;
             }
 

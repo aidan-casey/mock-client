@@ -13,6 +13,9 @@ final class ResponseBag
 
     private bool $randomize = false;
 
+    /**
+     * @param array<array-key,ResponseInterface> $sequence
+     */
     public function __construct(array $sequence = [])
     {
         foreach ($sequence as $response) {
