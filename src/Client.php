@@ -54,7 +54,7 @@ final class Client implements ClientInterface
      */
     public static function random(array $responses = []): ResponseBag
     {
-        return static::sequence($responses)->randomize();
+        return self::sequence($responses)->randomize();
     }
 
     /**
@@ -66,7 +66,7 @@ final class Client implements ClientInterface
         $response = $client->responseFactory->createResponse($code);
         $body = is_array($body) ? json_encode($body) : $body;
 
-        if (! is_null($body)) {
+        if ($body !== null) {
             $stream = is_file($body)
                 ? $client->streamFactory->createStreamFromFile($body)
                 : $client->streamFactory->createStream($body);
