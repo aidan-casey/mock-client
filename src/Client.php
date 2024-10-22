@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AidanCasey\MockClient;
 
-use Http\Discovery\Psr17FactoryDiscovery;
 use PHPUnit\Framework\Assert as PHPUnit;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use PsrDiscovery\Discover;
+use RuntimeException;
 
 final class Client implements ClientInterface
 {
@@ -16,21 +19,25 @@ final class Client implements ClientInterface
 
     private readonly StreamFactoryInterface $streamFactory;
 
-    /** @var array<array-key,RequestInterface> $requests */
+    /** @var array<array-key,RequestInterface> */
     private array $requests = [];
 
     private RequestInterface $lastRequest;
 
-    /** @var array<string,ResponseInterface|ResponseBag> $fakedResponses */
+    /**
+     * @var array<string,ResponseInterface|ResponseBag>
+     */
     private array $fakedResponses = [];
 
-    /** @var array<string,ResponseInterface|ResponseBag> $fakedResponses */
+    /**
+     * @var array<string, ResponseInterface|ResponseBag>
+     */
     private array $fakedWildcardResponses = [];
 
     public function __construct(?ResponseFactoryInterface $responseFactory = null, ?StreamFactoryInterface $streamFactory = null)
     {
-        $this->responseFactory = $responseFactory ?: Psr17FactoryDiscovery::findResponseFactory();
-        $this->streamFactory = $streamFactory ?: Psr17FactoryDiscovery::findStreamFactory();
+        $this->responseFactory = $responseFactory ?? $this->initializeResponseFactory();
+        $this->streamFactory = $streamFactory ?? $this->initializeStreamFactory();
     }
 
     /**
@@ -38,7 +45,7 @@ final class Client implements ClientInterface
      */
     public static function fake(array $map = []): self
     {
-        return (new self)->setResponses($map);
+        return (new self())->setResponses($map);
     }
 
     /**
@@ -58,15 +65,16 @@ final class Client implements ClientInterface
     }
 
     /**
+     * @param null|string|array<mixed,mixed> $body
      * @param array<string,string> $headers
      */
-    public static function response(string|array $body = null, int $code = 200, array $headers = []): ResponseInterface
+    public static function response(null|string|array $body = null, int $code = 200, array $headers = []): ResponseInterface
     {
-        $client = (new self);
+        $client = (new self());
         $response = $client->responseFactory->createResponse($code);
         $body = is_array($body) ? json_encode($body) : $body;
 
-        if ($body !== null) {
+        if ($body) {
             $stream = is_file($body)
                 ? $client->streamFactory->createStreamFromFile($body)
                 : $client->streamFactory->createStream($body);
@@ -102,7 +110,8 @@ final class Client implements ClientInterface
         $this->assertRequestsWereMade();
 
         PHPUnit::assertSame(
-            strtolower($uri), strtolower($this->lastRequest->getUri()->__toString())
+            strtolower($uri),
+            strtolower($this->lastRequest->getUri()->__toString())
         );
 
         return $this;
@@ -113,7 +122,8 @@ final class Client implements ClientInterface
         $this->assertRequestsWereMade();
 
         PHPUnit::assertSame(
-            strtoupper($method), strtoupper($this->lastRequest->getMethod())
+            strtoupper($method),
+            strtoupper($this->lastRequest->getMethod())
         );
 
         return $this;
@@ -124,7 +134,8 @@ final class Client implements ClientInterface
         $this->assertRequestsWereMade();
 
         PHPUnit::assertSame(
-            $value, $this->lastRequest->getHeaderLine($header)
+            $value,
+            $this->lastRequest->getHeaderLine($header)
         );
 
         return $this;
@@ -135,7 +146,8 @@ final class Client implements ClientInterface
         $this->assertRequestsWereMade();
 
         PHPUnit::assertSame(
-            $content, $this->lastRequest->getBody()->getContents()
+            $content,
+            $this->lastRequest->getBody()->getContents()
         );
 
         return $this;
@@ -151,7 +163,8 @@ final class Client implements ClientInterface
         $this->assertRequestsWereMade();
 
         PHPUnit::assertStringContainsString(
-            $content, $this->lastRequest->getBody()->getContents()
+            $content,
+            $this->lastRequest->getBody()->getContents()
         );
 
         return $this;
@@ -228,5 +241,19 @@ final class Client implements ClientInterface
         }
 
         return null;
+    }
+
+    private function initializeResponseFactory(): ResponseFactoryInterface
+    {
+        return Discover::httpResponseFactory() ?? throw new RuntimeException(
+            'The PSR request factory cannot be null. Please ensure that it is properly initialized.'
+        );
+    }
+
+    private function initializeStreamFactory(): StreamFactoryInterface
+    {
+        return Discover::httpStreamFactory() ?? throw new RuntimeException(
+            'The PSR stream factory cannot be null. Please ensure that it is properly initialized.'
+        );
     }
 }

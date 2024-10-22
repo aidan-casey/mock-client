@@ -1,5 +1,5 @@
+.cache/
 .idea/
-.phpunit.cache/
 build/
 vendor/
 composer.lock

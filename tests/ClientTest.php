@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AidanCasey\MockClient\Tests;
 
 use AidanCasey\MockClient\Client;
@@ -8,6 +10,9 @@ use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 
+/**
+ * @internal
+ */
 class ClientTest extends TestCase
 {
     public function test_it_will_fake_exact_uris()
@@ -15,7 +20,7 @@ class ClientTest extends TestCase
         $response = Client::response(code: 201);
 
         $client = Client::fake([
-            'example.com/some/path' => $response
+            'example.com/some/path' => $response,
         ]);
 
         $request1 = $this->createRequest('GET', 'example.com/some/path');
@@ -65,7 +70,7 @@ class ClientTest extends TestCase
         ];
 
         $client = Client::fake([
-            'example.com/testing' => Client::sequence($sequence)
+            'example.com/testing' => Client::sequence($sequence),
         ]);
 
         $request = $this->createRequest('GET', 'example.com/testing');
@@ -84,7 +89,7 @@ class ClientTest extends TestCase
         ];
 
         $client = Client::fake([
-            'example.com/*' => Client::random($sequence)
+            'example.com/*' => Client::random($sequence),
         ]);
 
         $request = $this->createRequest('GET', 'example.com/testing');
@@ -137,7 +142,7 @@ class ClientTest extends TestCase
 
     public function test_it_passes_request_uri_assertions()
     {
-        $client = new Client;
+        $client = new Client();
 
         $client->sendRequest(
             $this->createRequest('GET', 'https://example.com')
@@ -150,7 +155,7 @@ class ClientTest extends TestCase
     {
         $this->expectException(ExpectationFailedException::class);
 
-        $client = new Client;
+        $client = new Client();
 
         $client->sendRequest(
             $this->createRequest('GET', 'https://example.com')
@@ -161,7 +166,7 @@ class ClientTest extends TestCase
 
     public function test_it_passes_request_method_assertions()
     {
-        $client = new Client;
+        $client = new Client();
 
         $client->sendRequest(
             $this->createRequest('GET', 'https://example.com')
@@ -174,7 +179,7 @@ class ClientTest extends TestCase
     {
         $this->expectException(ExpectationFailedException::class);
 
-        $client = new Client;
+        $client = new Client();
 
         $client->sendRequest(
             $this->createRequest('GET', 'https://example.com')
@@ -185,7 +190,7 @@ class ClientTest extends TestCase
 
     public function test_it_passes_header_equals_assertions()
     {
-        $client = new Client;
+        $client = new Client();
 
         $request = $this
             ->createRequest('GET', 'https://example.com')
@@ -200,7 +205,7 @@ class ClientTest extends TestCase
     {
         $this->expectException(ExpectationFailedException::class);
 
-        $client = new Client;
+        $client = new Client();
 
         $request = $this->createRequest('GET', 'https://example.com');
 
@@ -211,8 +216,8 @@ class ClientTest extends TestCase
 
     public function test_it_passes_body_is_assertions()
     {
-        $client = new Client;
-        $streamFactory = new HttpFactory;
+        $client = new Client();
+        $streamFactory = new HttpFactory();
 
         $client->sendRequest(
             $this
@@ -229,8 +234,8 @@ class ClientTest extends TestCase
     {
         $this->expectException(ExpectationFailedException::class);
 
-        $client = new Client;
-        $streamFactory = new HttpFactory;
+        $client = new Client();
+        $streamFactory = new HttpFactory();
 
         $client->sendRequest(
             $this
@@ -245,7 +250,7 @@ class ClientTest extends TestCase
 
     public function test_it_passes_body_is_empty_assertions()
     {
-        $client = new Client;
+        $client = new Client();
 
         $client->sendRequest(
             $this->createRequest('POST', 'https://example.com')
@@ -258,8 +263,8 @@ class ClientTest extends TestCase
     {
         $this->expectException(ExpectationFailedException::class);
 
-        $client = new Client;
-        $streamFactory = new HttpFactory;
+        $client = new Client();
+        $streamFactory = new HttpFactory();
 
         $client->sendRequest(
             $this
@@ -274,8 +279,8 @@ class ClientTest extends TestCase
 
     public function test_it_passes_body_contains_assertions()
     {
-        $client = new Client;
-        $streamFactory = new HttpFactory;
+        $client = new Client();
+        $streamFactory = new HttpFactory();
 
         $client->sendRequest(
             $this
@@ -292,8 +297,8 @@ class ClientTest extends TestCase
     {
         $this->expectException(ExpectationFailedException::class);
 
-        $client = new Client;
-        $streamFactory = new HttpFactory;
+        $client = new Client();
+        $streamFactory = new HttpFactory();
 
         $client->sendRequest(
             $this
@@ -308,7 +313,7 @@ class ClientTest extends TestCase
 
     public function test_it_passes_requests_were_made_assertions()
     {
-        $client = new Client;
+        $client = new Client();
 
         $client->sendRequest(
             $this->createRequest('GET', 'https://example.com')
@@ -321,19 +326,19 @@ class ClientTest extends TestCase
     {
         $this->expectException(ExpectationFailedException::class);
 
-        (new Client)->assertRequestsWereMade();
+        (new Client())->assertRequestsWereMade();
     }
 
     public function test_it_passes_no_requests_were_made_assertion()
     {
-        (new Client)->assertNoRequestsWereMade();
+        (new Client())->assertNoRequestsWereMade();
     }
 
     public function test_it_fails_no_requests_were_made_assertion()
     {
         $this->expectException(ExpectationFailedException::class);
 
-        $client = new Client;
+        $client = new Client();
 
         $client->sendRequest(
             $this->createRequest('GET', 'https://example.com')
@@ -344,7 +349,7 @@ class ClientTest extends TestCase
 
     private function createRequest(string $method, string $uri): RequestInterface
     {
-        $factory = new HttpFactory;
+        $factory = new HttpFactory();
 
         return $factory->createRequest($method, $uri);
     }

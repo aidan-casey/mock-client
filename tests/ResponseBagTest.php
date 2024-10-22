@@ -1,11 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AidanCasey\MockClient\Tests;
 
 use AidanCasey\MockClient\ResponseBag;
 use GuzzleHttp\Psr7\HttpFactory;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @internal
+ */
 class ResponseBagTest extends TestCase
 {
     public function test_it_will_retrieve_responses_in_sequence()

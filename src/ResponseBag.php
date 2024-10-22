@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AidanCasey\MockClient;
 
 use Psr\Http\Message\ResponseInterface;
