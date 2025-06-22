@@ -10,7 +10,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "phpunit/phpunit": "^11.3.5",
+        "phpunit/phpunit": "^12.2.3",
         "psr-discovery/http-factory-implementations": "^1.1",
         "psr/http-client": "^1.0",
         "psr/http-factory": "^1.0",
